@@ -63,7 +63,7 @@ This workflow acts as the "brain" of the operation. It's a stateful agent that m
     * **Trigger:** Called when a user asks a question *without* a URL (e.g., "*What were my action items last week?*") or when they ask a question about a meeting that is already known to exist.
     * **Action:** Performs a semantic search against the `transcript_chunks` vector database to find the most relevant information to answer the user's query directly.
 
-![Alt text for the image](path/to/your/image.jpg)
+![Alt text for the image](assets/Orchestrator.png) 
 ---
 
 ### 2. Sub-Workflow: `Transcript_maker.json`
@@ -90,7 +90,9 @@ This workflow is the "factory." It is not triggered directly by the user but is 
         2.  **Create Chunk Embeddings:** An embedding is created for *each individual chunk*.
         3.  **Insert Chunks:** Each chunk, its embedding, and the `transcript_id` (linking it to the main `meetinglist` row) are saved to the `transcript_chunks` table (`HTTP Request1`). This database is used by the `Meeting Retrieval Tool` for detailed Q&A.
 
-![Alt text for the image](path/to/your/image.jpg)
+![Alt text for the image](assets/Transcript_maker_01.png) 
+
+![Alt text for the image](assets/Transcript_maker_02.png) 
 ---
 
 ##  Setup & Prerequisites
