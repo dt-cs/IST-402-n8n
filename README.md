@@ -113,11 +113,3 @@ To run this project, you will need:
         * `https://zoom-transcript-scraper-423771082043.us-central1.run.app`
     * You will need to deploy your own versions of these scraper functions for the workflow to be operational.
 
-##  How to Use
-
-1.  Ensure all prerequisites, database tables, and credentials are correctly set up in your n8n instance.
-2.  Activate the `Chat agent.json` workflow.
-3.  Access the chat URL provided by the `When chat message received` trigger.
-4.  Start the conversation. You can either:
-    * **Provide a new URL:** "Here is the link to our last planning session: https://zoom.us/..."
-    * **Ask a question:** "What were the action items from the 'Project X' meeting?"
