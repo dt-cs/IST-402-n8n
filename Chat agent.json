@@ -1,0 +1,377 @@
+{
+  "name": "Chat agent",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "You are the **Meeting Orchestrator Agent**, the central coordinator responsible for managing all meeting-related tasks.  \nYou intelligently decide **when to call tools**, how to interpret user requests, and how to deliver clear, actionable, professional results.\n\nYour mission is to help users **process meetings**, **summarize content**, **extract insights**, **answer questions**, and **manage follow-up actions**.\n\nYou will analyze the URL to check if it is a YouTube or Zoom link, continue further only if it is either of them, if not ask them to provide valid URL of only YouTube or Zoom\n---\n\n## 🎯 Core Responsibilities\n\n### 1. Tool Orchestration\n\nYou have access to multiple tools. The workflow for handling user requests is **stepwise**:\n\n#### Step 1: Meeting Existence Checker Tool\n\nThis tool:\n\n- Checks if a meeting with the given URL already exists in the database  \n- Uses the query format: `zoom_url=eq.<your_meeting_url>`  \n\n**When to call this tool:**\n\n- Whenever a user provides a meeting URL  \n- Before creating a new transcript or storing data\n\n**Outcome:**\n\n- If the meeting exists → Skip transcript creation and optionally inform the user  \n- If the meeting does not exist → Proceed to transcript creation\n\n---\n\n#### Step 2: Transcript Maker Tool\n\nThis tool:\n\n- Extracts transcripts from meeting URLs  \n- Summarizes and analyzes meeting content  \n- Generates embeddings  \n- Stores results in the vector database\n\n**When to call this tool:**\n\n- After confirming the meeting does **not** exist in the database  \n- If a transcript does not yet exist and user provides a meeting URL  \n- If a user requests:\n  - A transcript  \n  - A meeting summary  \n  - Meeting insights  \n  - Action items  \n  - Deadlines  \n  - Sentiment or keyword extraction\n\n**Default assumption:**  \nIf a URL is provided and no existing record is found, **always run the full pipeline** unless the user explicitly says *“don’t create a transcript.”*\n\n---\n\n#### Step 3: Meeting Retrieval Tool\n\nThis tool:\n\n- Retrieves information from previously processed meetings  \n- Performs semantic search over stored transcripts using the vector database\n\n**When to call this tool:**\n\n1. **User asks a question about a meeting without providing a URL**  \n   - Query the database for relevant meeting content using the user’s question  \n   - **If results are found:** Respond with  \n     *“It looks like I have found some information related to your query. Can you provide more details or a meeting URL to correctly identify it?”*  \n   - **If no results are found:** Prompt the user to provide a meeting URL because no matching data exists\n\n2. **Transcript already exists** and you need to fetch summaries, insights, action items, or any other relevant context\n\nProvide the user’s query as input so the tool can return the most relevant meeting segments.\n\n---\n\n### 2. Understanding User Intent\n\n- Interpret vague instructions and infer the user’s goal  \n- Ask for clarification only if needed for accuracy\n\n**Examples:**\n\n- “Here’s my meeting link” → **Call existence checker tool first**, then transcript tool if needed  \n- “Can you summarize this meeting?” → Use existing transcript or request link/call tool  \n- “What were the action items?” → Retrieve from metadata or ask for reference  \n- “Tell me about last week’s sales meeting” → Query meeting retrieval tool; ask for URL if needed\n\n---\n\n### 3. Contextual Reasoning\n\nMaintain awareness of:\n\n- Previously processed meetings  \n- Stored summaries, action items, insights  \n- User’s follow-up queries about past transcripts\n\nUse vector database searches to answer semantic questions like:\n\n- “Which meeting discussed deadlines for Project X?”  \n- “Find notes where pricing was mentioned”\n\n---\n\n### 4. Clear and Helpful Output\n\nResponses must be:\n\n- Concise  \n- Structured  \n- Immediately useful  \n- Professional  \n- Non-technical unless requested\n\n**Formats:**\n\n- Summaries:\n  - Executive Summary  \n  - Key Points  \n  - Decisions Made  \n  - Action Items with Owners  \n  - Deadlines & Important Dates\n- Q&A:  \n  - Direct answers  \n  - Cite transcript segments when helpful\n\n---\n\n## 📌 Behavioral Rules\n\n1. Think step-by-step about which tool is needed  \n2. If a URL is present:\n   - Call the **Meeting Existence Checker Tool** first  \n   - If it exists → Inform user or skip creation  \n   - If it does not exist → Call **Transcript Maker Tool**\n3. If no URL is provided and user asks about a meeting → Call **Meeting Retrieval Tool**  \n4. Never hallucinate transcript content — only use tool-generated results  \n5. When no tool is required, answer directly  \n6. Return the final answer to the user after tool execution  \n7. Be proactive but not intrusive  \n8. Avoid unnecessary questions  \n9. Assist efficiently when in doubt"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -16,
+        -32
+      ],
+      "id": "d389aba5-0ea9-4f91-a0b7-a522c07827ac",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -352,
+        192
+      ],
+      "id": "e3ba4033-7311-4e82-a4f5-1fb8af7612ad",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "your-api-key",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "###**Transcript Maker **\n\n**Use this tool whenever the user provides a meeting URL.**\n\nThis tool will:\n\n- Retrieve and transcribe the meeting  \n- Generate summaries, insights, and supporting metadata  \n- Create vector embeddings for semantic search  \n- Store all processed information in the vector database  \n\n**Input:**  \nA single meeting URL as a text string.\n\n**Purpose:**  \nTransform a meeting URL into a fully processed, searchable transcript record.",
+        "workflowId": {
+          "__rl": true,
+          "value": "your-api-key",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/1IfYta8hNGkiiYf2",
+          "cachedResultName": "Transcript_maker"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('url', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        560
+      ],
+      "id": "87d2660f-59d4-4734-a530-fb29eb83d00a",
+      "name": "Call 'Transcript_maker'"
+    },
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Hey There !",
+        "options": {
+          "showWelcomeScreen": true,
+          "getStarted": "New Conversation",
+          "subtitle": "Provide a URL of Zoom or Youtube Meeting for Summarization and QA",
+          "title": "Meeting Summarizer",
+          "customCss": ":root {\n  /* ------------------------------------------------------------------\n     COLOR PALETTE\n  ------------------------------------------------------------------ */\n  --chat-color-primary: #e74266;\n  --chat-color-primary-50: #db4061;\n  --chat-color-primary-100: #cf3c5c;\n\n  --chat-color-secondary: #20b69e;\n  --chat-color-secondary-50: #1ca08a;\n\n  --chat-color-white: #ffffff;\n  --chat-color-light: #f2f4f8;\n  --chat-color-light-50: #e6e9f1;\n  --chat-color-light-100: #c2c5cc;\n\n  --chat-color-medium: #d2d4d9;\n  --chat-color-dark: #101330;\n  --chat-color-disabled: #777980;\n  --chat-color-typing: #404040;\n\n  /* ------------------------------------------------------------------\n     TYPOGRAPHY & GLOBAL SPACING\n  ------------------------------------------------------------------ */\n  --chat-font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto,\n    Oxygen-Sans, Ubuntu, Cantarell, \"Helvetica Neue\", sans-serif;\n\n  --chat-spacing: 1rem;\n  --chat-radius: 0.4rem;\n  --chat-transition: 0.15s ease;\n\n  /* ------------------------------------------------------------------\n     CHAT WINDOW LAYOUT\n  ------------------------------------------------------------------ */\n  --chat-window-width: 400px;\n  --chat-window-height: 600px;\n  --chat-window-bottom: var(--chat-spacing);\n  --chat-window-right: var(--chat-spacing);\n  --chat-window-z: 9999;\n\n  --chat-window-border: 1px solid var(--chat-color-light-50);\n  --chat-window-radius: var(--chat-radius);\n\n  /* ------------------------------------------------------------------\n     HEADER\n  ------------------------------------------------------------------ */\n  --chat-header-height: auto;\n  --chat-header-padding: var(--chat-spacing);\n  --chat-header-bg: var(--chat-color-dark);\n  --chat-header-color: var(--chat-color-light);\n  --chat-header-font-size: 1.6rem;\n  --chat-header-subtitle-size: 1rem;\n\n  /* ------------------------------------------------------------------\n     MESSAGES\n  ------------------------------------------------------------------ */\n  --chat-message-font-size: 1rem;\n  --chat-message-padding: var(--chat-spacing);\n  --chat-message-radius: var(--chat-radius);\n  --chat-message-line-height: 1.5;\n  --chat-message-gap: calc(var(--chat-spacing) * 0.75);\n\n  --chat-message-bot-bg: var(--chat-color-white);\n  --chat-message-bot-color: var(--chat-color-dark);\n\n  --chat-message-user-bg: var(--chat-color-secondary);\n  --chat-message-user-color: var(--chat-color-white);\n\n  --chat-message-pre-bg: rgba(0, 0, 0, 0.05);\n  --chat-messages-padding: var(--chat-spacing);\n\n  /* ------------------------------------------------------------------\n     TOGGLE BUTTON\n  ------------------------------------------------------------------ */\n  --chat-toggle-size: 64px;\n  --chat-toggle-bg: var(--chat-color-primary);\n  --chat-toggle-bg-hover: var(--chat-color-primary-50);\n  --chat-toggle-bg-active: var(--chat-color-primary-100);\n  --chat-toggle-color: var(--chat-color-white);\n\n  /* ------------------------------------------------------------------\n     INPUT AREA\n  ------------------------------------------------------------------ */\n  --chat-input-height: 50px;\n  --chat-input-max-height: 30rem;\n  --chat-input-font-size: 1rem;\n  --chat-input-padding: 0.8rem;\n  --chat-input-bg: var(--chat-color-white);\n  --chat-input-color: var(--chat-color-dark);\n\n  --chat-input-placeholder-size: var(--chat-input-font-size);\n  --chat-input-left-panel-width: 2rem;\n\n  /* ------------------------------------------------------------------\n     BUTTONS\n  ------------------------------------------------------------------ */\n  --chat-btn-bg: var(--chat-color-primary);\n  --chat-btn-color: var(--chat-color-light);\n  --chat-btn-padding: 0.5rem var(--chat-spacing);\n  --chat-btn-radius: var(--chat-radius);\n  --chat-btn-bg-hover: var(--chat-color-primary-50);\n  --chat-btn-color-hover: var(--chat-color-light);\n\n  --chat-close-hover-color: var(--chat-color-primary);\n\n  /* Send & File Buttons */\n  --chat-send-btn-bg: var(--chat-color-white);\n  --chat-send-btn-color: var(--chat-color-light);\n  --chat-send-btn-bg-hover: var(--chat-color-primary-50);\n  --chat-send-btn-color-hover: var(--chat-color-secondary-50);\n\n  --chat-file-btn-bg: var(--chat-color-white);\n  --chat-file-btn-color: var(--chat-color-secondary);\n  --chat-file-btn-bg-hover: var(--chat-color-white);\n  --chat-file-btn-color-hover: var(--chat-color-secondary-50);\n\n  --chat-file-spacing: 0.25rem;\n\n  /* ------------------------------------------------------------------\n     BODY & FOOTER\n  ------------------------------------------------------------------ */\n  --chat-body-bg: var(--chat-color-light);\n  --chat-footer-bg: var(--chat-color-light);\n  --chat-footer-color: var(--chat-color-dark);\n}\n\n/* ------------------------------------------------------------------\n   OPTIONAL OVERRIDES\n------------------------------------------------------------------ */\n\n.chat-message {\n  max-width: 55%; /* Slightly more natural bubble width */\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -368,
+        -32
+      ],
+      "id": "0b9f9f0d-b8cf-4235-9951-dacbeddc6e89",
+      "name": "When chat message received",
+      "webhookId": "your-api-key"
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 25
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        -240,
+        352
+      ],
+      "id": "665ca3cc-534c-48d9-bccc-8c188ce52fc1",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "your-api-key",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        784,
+        336
+      ],
+      "id": "c0e4ed10-8aff-4b07-be1a-61ac832ddfbf",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "your-api-key",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "###**Meeting Retrieval Tool**\n\nCall this tool to retrieve information from previously processed meetings.  \nThe tool uses the vector database to perform semantic search over all stored meeting transcripts.\n\nUse this tool in two situations:\n1. **When a user asks a question about an existing meeting** (e.g., “What were the action items from last week’s call?”).  \n2. **When a transcript has already been generated** and you need to fetch summaries, insights, action items, or any other relevant context from the stored data.\n\nProvide the user’s query as input so the tool can return the most relevant meeting segments.",
+        "tableName": {
+          "__rl": true,
+          "value": "meetinglist",
+          "mode": "list",
+          "cachedResultName": "meetinglist"
+        },
+        "options": {
+          "queryName": "match_meetings"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        784,
+        176
+      ],
+      "id": "b45433d0-d970-4b4d-8725-8c450626abea",
+      "name": "Supabase Vector Store",
+      "credentials": {
+        "supabaseApi": {
+          "id": "your-api-key",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "### **Meeting Existence Checker Tool**\n\n> _“Call this tool to check if a meeting already exists in the database when a URL is provided.”_\n\n**Purpose:**  \nThis tool allows the agent to verify whether a meeting with the given URL has already been processed and stored in the vector database.\n\n**When to Use:**  \n- Whenever a user provides a meeting URL (Zoom, YouTube, etc.)  \n- Before creating a new transcript or storing data  \n\n**Input:**  \n- The meeting URL provided by the user  \n- Use the query zoom_url: eq.<your_meeting_url>  \n\n**Output:**  \n- Boolean or relevant metadata indicating whether the meeting already exists  \n- If found, optionally return existing meeting details for reference",
+        "url": "https://sjgbaigjurwbszvphold.supabase.co/rest/v1/meetinglist",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "zoom_url",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `the value should be eq.<URL>\\n\\nREPLACE THE <URL> with the user provided one`, 'string') }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "your-api-key"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer your-api-key"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        384,
+        432
+      ],
+      "id": "a05d071d-c620-4515-9065-5cb72e7e3d6b",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "content": "## Retriever tool \nThis retriever tool is used when the user asks about a meeting they previously attended.  \nIt queries the vector database created during the initial URL processing.  Used for detailed Q&A, retrieving insights, summaries, and transcript segments from past meetings.",
+        "height": 480,
+        "width": 448,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        736,
+        -16
+      ],
+      "typeVersion": 1,
+      "id": "6404d63a-6fa3-441e-a45a-8cb34434c632",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Meeting Existence Check  \nThis HTTP node is triggered when a URL is provided. It checks the database to see if information about the meeting already exists. If found, it returns the existing meeting details; if not, the AI agent proceeds to call the transcript maker tool to generate transcripts and create the vector database.",
+        "height": 480,
+        "width": 352,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        352,
+        192
+      ],
+      "typeVersion": 1,
+      "id": "f989ae57-8f39-4f3f-a365-50e5bc5b15c1",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Transcript Maker  \nThis tool is triggered when a meeting URL is provided for the first time. It runs a sub-workflow containing separate transcript scrapers for Zoom and YouTube. After extracting the transcript, it generates structured data and stores it in the vector database, enabling future semantic search and detailed Q&A.",
+        "height": 480,
+        "width": 352,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -32,
+        336
+      ],
+      "typeVersion": 1,
+      "id": "e7ed1022-9d76-47bf-bde5-57a27012f5f3",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Main Orchestrator Agent  \nThis agent receives the user’s input from the chat interface and determines which tool to call based on the user’s intent. It decides whether to check meeting existence, retrieve stored information, or initiate transcript creation, ensuring accurate and efficient processing of all meeting-related queries.",
+        "height": 448,
+        "width": 352
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -32,
+        -256
+      ],
+      "typeVersion": 1,
+      "id": "7f1ea432-5758-40ea-a0af-0c53f3d71453",
+      "name": "Sticky Note3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        []
+      ]
+    },
+    "Call 'Transcript_maker'": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "your-api-key",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "your-api-key"
+  },
+  "id": "your-api-key",
+  "tags": []
+}
