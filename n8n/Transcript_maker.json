@@ -1,0 +1,1155 @@
+{
+  "name": "Transcript_maker",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://youtubecc-423771082043.us-central1.run.app",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "={{ $json.message.content.url }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -768,
+        496
+      ],
+      "id": "23e957df-3411-415f-8d0b-bdf41a562c6a",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are an AI assistant specialized in analyzing meeting transcripts. \nGiven the full transcript of a Zoom meeting, your task is to extract structured information and provide actionable insights. \n\nOutput MUST be a valid JSON object with the following fields:\n\n1. \"metadata\": object\n   - Include information such as \"meeting_title\", \"date\", \"project\", or any relevant details inferred from the transcript.\n   \n2. \"attendees\": array of strings\n   - List all participants who spoke in the meeting.\n\n3. \"summary\": string\n   - Provide a concise summary of the meeting (2–5 sentences) capturing key topics discussed.\n\n4. \"action_items\": array of objects\n   - Each object should contain:\n     - \"task\": string describing the action\n     - \"owner\": string identifying the responsible person\n     - \"due\": string date if available (optional)\n\n5. \"insights\": object\n   - Key takeaways, decisions made, important notes, or any other insight from the meeting. \n   - Include topics, priorities, or noteworthy points.\n\nConstraints:\n- The response MUST be valid JSON.\n- Do NOT include any explanation outside the JSON.\n- If any field is missing information, use null or an empty array/object as appropriate.\n- Avoid free text outside of JSON format.\n\nExample output:\n\n{\n  \"metadata\": {\n    \"meeting_title\": \"Design Review Meeting\",\n    \"date\": \"2025-11-15\",\n    \"project\": \"Project X\"\n  },\n  \"attendees\": [\"John\", \"Alice\", \"Bob\"],\n  \"summary\": \"The team discussed the new design iteration for Project X, finalized key decisions on layout, and reviewed deadlines for upcoming deliverables.\",\n  \"action_items\": [\n    {\"task\": \"Send revised drawings\", \"owner\": \"Alice\", \"due\": \"2025-11-20\"},\n    {\"task\": \"Prepare client presentation\", \"owner\": \"John\", \"due\": \"2025-11-18\"}\n  ],\n  \"insights\": {\n    \"topics\": [\"Design Iteration\", \"Client Presentation\", \"Deadlines\"],\n    \"priority\": \"High\",\n    \"decisions\": [\"Finalize layout\", \"Set submission dates\"]\n  }\n}",
+              "role": "system"
+            },
+            {
+              "content": "={{ $json.transcript }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        560,
+        80
+      ],
+      "id": "97e56f67-36a6-4088-b04f-42acfe73ead4",
+      "name": "Message a model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "phuOjcp7PGbD89aM",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "902c0e03-60db-493f-929f-70ff2b86a4b4",
+              "name": "metadata",
+              "value": "={{ $json.message.content.metadata }}",
+              "type": "object"
+            },
+            {
+              "id": "564f42bd-c9fc-46bb-b060-782cd44eb488",
+              "name": "attendees",
+              "value": "={{ $json.message.content.attendees }}",
+              "type": "array"
+            },
+            {
+              "id": "a00f7a1d-b430-47e8-91d8-5ba90f78fc21",
+              "name": "content",
+              "value": "={{ $json.message.content.summary }}",
+              "type": "string"
+            },
+            {
+              "id": "5edaa788-214a-49d5-92d5-ae84d9c32030",
+              "name": "action_items",
+              "value": "={{ $json.message.content.action_items }}",
+              "type": "array"
+            },
+            {
+              "id": "ba1b6cf5-7958-433f-9b14-38d17875f1a7",
+              "name": "insights",
+              "value": "={{ $json.message.content.insights }}",
+              "type": "object"
+            },
+            {
+              "id": "1653e97f-1a8c-4ea5-9318-5d8476ca2cb5",
+              "name": "zoom_url",
+              "value": "={{ $('Switch').item.json.message.content.url }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        992,
+        80
+      ],
+      "id": "8758fa97-fc5d-4866-b2a3-a8505f2c57aa",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "715a165e-544f-4bd8-957d-113a616c3c44",
+              "name": "transcript",
+              "value": "={{ $json.transcript }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        336,
+        944
+      ],
+      "id": "3d2c9c75-6b96-4fb9-891e-e832af756f53",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "meetinglist",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "zoom_url",
+              "keyValue": "={{ $('Message a model').item.json.message.content.url }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        608,
+        384
+      ],
+      "id": "c7d884da-861e-4de9-90b6-ed0bfa79bd89",
+      "name": "Get a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "gxN5iYGlAu6ezqAo",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        784,
+        928
+      ],
+      "id": "b762a166-aa1a-4995-bb0b-e5cd6982fb07",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c3ed4a9a-840a-47f9-9e96-1e6cdcc2bb97",
+              "name": "content",
+              "value": "={{ $json.transcript }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        992,
+        864
+      ],
+      "id": "9416ce38-dd8a-426b-8a9f-d898ebf01826",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"metadata\": {\n    \"summary\": \"{{ $json.metadata.summary }}\",\n    \"insights\": {{ $json.metadata.insights}},\n    \"action_items\": {{ $json.metadata.action_items}},\n    \"attendees\": {{ $json.metadata.attendees }},\n    \"transcript_id\": \"{{ $json.id }}\",\n    \"url\": \"{{ $json.metadata.url }}\"\n  },\n  \"transcript_id\": \"{{ $json.id }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        992,
+        1040
+      ],
+      "id": "64352cca-5404-466b-9b8f-283b8f2fb557",
+      "name": "Edit Fields4"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1200,
+        928
+      ],
+      "id": "4d972254-f4c4-4f2a-a2d4-5f08b67fc07f",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "code": {
+          "execute": {
+            "code": "const { RecursiveCharacterTextSplitter } = require(\"@langchain/textsplitters\");\nconst { OpenAIEmbeddings } = require(\"@langchain/openai\");\n\nasync function run() {\n  const transcript = $json.content;\n\n  if (!transcript || typeof transcript !== \"string\") {\n    throw new Error(\"No transcript text found in $json.content.\");\n  }\n\n  // Create splitter\n  const splitter = new RecursiveCharacterTextSplitter({\n    chunkSize: 1200,\n    chunkOverlap: 200,\n    separators: [\"\\n\\n\", \"\\n\", \".\", \"!\", \"?\"],\n  });\n\n  // Wrap transcript as a document\n  const docs = [\n    {\n      pageContent: transcript,\n      metadata: { source: \"transcript\" },\n    },\n  ];\n\n  // Split text into chunks\n  const chunks = await splitter.splitDocuments(docs);\n\n  // Create embeddings instance\n  const embeddings = new OpenAIEmbeddings({\n    apiKey: \"your-api-key\",\n    model: \"text-embedding-3-small\",\n  });\n\n  // Generate embeddings for each chunk\n  const contents = chunks.map(c => c.pageContent);\n  const vectors = await embeddings.embedDocuments(contents);\n\n  // Return n8n items array\n  return chunks.map((chunk, index) => ({\n    json: {\n      transcript_id: $json.transcript_id,\n      chunk_index: index,\n      content: chunk.pageContent,\n      metadata: $json.metadata,\n      embedding: vectors[index],\n    },\n  }));\n}\n\nreturn run();\n"
+          }
+        },
+        "inputs": {
+          "input": [
+            {
+              "type": "main",
+              "required": true
+            }
+          ]
+        },
+        "outputs": {
+          "output": [
+            {
+              "type": "main"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.code",
+      "typeVersion": 1,
+      "position": [
+        1392,
+        928
+      ],
+      "id": "3be2cfc0-c7d1-40ff-8770-dd385a5e9c5c",
+      "name": "LangChain Code"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://sjgbaigjurwbszvphold.supabase.co/rest/v1/transcript_chunks?on_conflict=transcript_id,chunk_index",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "your-api-key"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer your-api-key"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "transcript_id",
+              "value": "={{ $json.transcript_id }}"
+            },
+            {
+              "name": "chunk_index",
+              "value": "={{ parseInt($json.chunk_index, 10) }}"
+            },
+            {
+              "name": "content",
+              "value": "={{ $json.content }}"
+            },
+            {
+              "name": "metadata",
+              "value": "={{ $json.metadata }}"
+            },
+            {
+              "name": "embedding",
+              "value": "={{ $json.embedding }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1632,
+        928
+      ],
+      "id": "041352d1-cdcb-43db-ae0c-a9e6dc99ffc9",
+      "name": "HTTP Request1",
+      "alwaysOutputData": false,
+      "notesInFlow": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "code": {
+          "execute": {
+            "code": "const { OpenAIEmbeddings } = require(\"@langchain/openai\");\n\nasync function run() {\n  const transcriptText = $json.transcripts; // single transcript string\n  const id = $json.id;\n\n  // Initialize embeddings\n  const embeddings = new OpenAIEmbeddings({\n    apiKey: \"your-api-key\",\n    model: \"text-embedding-3-small\",\n  });\n\n  // Generate embedding for the single transcript\n  const vector = await embeddings.embedQuery(transcriptText);\n\n  // Prepare payload for storage\n  const payload = {\n    id: id,\n    embedding: vector,\n  };\n\n  // Return for next node\n  return [{ json: payload }];\n}\n\nreturn run();"
+          }
+        },
+        "inputs": {
+          "input": [
+            {
+              "type": "main",
+              "required": true
+            }
+          ]
+        },
+        "outputs": {
+          "output": [
+            {
+              "type": "main"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.code",
+      "typeVersion": 1,
+      "position": [
+        1392,
+        400
+      ],
+      "id": "6bfe60a9-5d06-4dd9-98e0-386976b39b4c",
+      "name": "LangChain Code1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5051d392-0a46-4fa7-89e1-999934889cdc",
+              "name": "transcripts",
+              "value": "={{ $json.metadata.project }} - {{ $json.metadata.meeting_title }}\\n\n{{ $json.content }}\\n",
+              "type": "string"
+            },
+            {
+              "id": "d2052f5a-febd-4429-9fd6-0ea0846291f8",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        992,
+        384
+      ],
+      "id": "fed71af2-1a87-4525-980d-ab7f1388b17e",
+      "name": "Edit Fields5"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://sjgbaigjurwbszvphold.supabase.co/rest/v1/meetinglist?id=eq.{{ $json.id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "your-api-key"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer your-api-key"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "embedding",
+              "value": "={{ $json.embedding }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1632,
+        560
+      ],
+      "id": "b948ada1-ca3a-4a13-a29b-a6634f5d2088",
+      "name": "HTTP Request3",
+      "alwaysOutputData": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1200,
+        400
+      ],
+      "id": "401166ad-903e-4240-9396-4490bdcf1579",
+      "name": "Merge2"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"metadata\": {\n    \"summary\": \"{{ $json.content }}\",\n    \"insights\": {{ $json.insights }} ,\n    \"url\": \"{{ $json.zoom_url }}\",\n    \"insights\": {{ $json.insights }},\n    \"action_items\": {{ $json.action_items }},\n    \"attendees\": {{ $json.attendees }}\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1184,
+        208
+      ],
+      "id": "bfc805a0-49bd-44d0-8008-0ba978c9f702",
+      "name": "Edit Fields6"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1376,
+        96
+      ],
+      "id": "60db7e6c-6c1f-42b1-a449-58fd3b00a9b2",
+      "name": "Merge3"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "url"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1904,
+        288
+      ],
+      "id": "c452d4d7-3d4f-43b8-ad92-35058e101185",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "Zoom",
+                    "rightValue": "={{ $json.message.content.task }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "ba6a1aed-a113-4e64-a279-f3f4bb79376a"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "94e5981f-db99-41f3-9645-e9c0e6755c99",
+                    "leftValue": "YouTube",
+                    "rightValue": "={{ $json.message.content.task }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -1344,
+        288
+      ],
+      "id": "284fcc5c-394d-4166-9e49-71ec34417c3e",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "Your task is to analyze the user’s message and determine whether the content is a valid URL.  \nIf **no valid URL is present**, respond normally as the assistant.\n\nIf a **valid URL is present**, you must respond **only** with a JSON object in the following format:\n\n```json\n{\n  \"task\": \"<YouTube | Zoom>\",\n  \"url\": \"<the URL provided by the user>\"\n}",
+              "role": "system"
+            },
+            {
+              "content": "={{ $json.url }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -1680,
+        288
+      ],
+      "id": "53de2bad-9b12-419b-aefc-8e6e24c680fc",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "phuOjcp7PGbD89aM",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://zoom-transcript-scraper-423771082043.us-central1.run.app",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "={{ $('Message a model').item.json.message.content.url }}"
+            },
+            {
+              "name": "isReferralProgramEnabled",
+              "value": "false"
+            },
+            {
+              "name": "isReferralProgramAvailable",
+              "value": "false"
+            },
+            {
+              "name": "accessLevel",
+              "value": "meeting"
+            },
+            {
+              "name": "canPlayFromShare",
+              "value": "true"
+            },
+            {
+              "name": "from",
+              "value": "share_recording_detail"
+            },
+            {
+              "name": "continueMode",
+              "value": "true"
+            },
+            {
+              "name": "componentName",
+              "value": "rec-play"
+            },
+            {
+              "name": "originRequestUrl",
+              "value": "https://harvard.zoom.us/rec/share/KczSTLrLpJ9wU9VZI6PaZ_IAsvqfihmNI9GnnpVcPXPMg8QJCJA3nzkYxFC_n95n.cvQECzRCX0qwJ6DU"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -752,
+        48
+      ],
+      "id": "e876551e-d489-469d-9870-39a019e54277",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the transcript array from the first input item\nconst transcriptArray = $input.first().json.transcript || [];\n\n// Join all spoken text into a single string\nconst joinedText = transcriptArray\n    .map(entry => {\n        const parts = entry.split(\", \");\n        return parts.slice(2).join(\", \"); // only the spoken text\n    })\n    .join(\" \"); // combine into one string\n\n// Return a single item with the joined transcript as a global field\nreturn [\n    {\n        json: {\n            transcript: joinedText\n        }\n    }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -528,
+        48
+      ],
+      "id": "7fc4d2f4-e096-4632-a604-f9079ea25555",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://sjgbaigjurwbszvphold.supabase.co/rest/v1/meetinglist?on_conflict=zoom_url",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "your-api-key"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer your-api-key"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "zoom_url",
+              "value": "={{ $json.metadata.url }}"
+            },
+            {
+              "name": "content",
+              "value": "={{ $json.content }}"
+            },
+            {
+              "name": "metadata",
+              "value": "={{ $json.metadata }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1632,
+        96
+      ],
+      "id": "7fee3b69-0cbb-4764-b070-39861afd5463",
+      "name": "HTTP Request5",
+      "alwaysOutputData": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4290f70d-9d15-4952-950e-a79e48401df4",
+              "name": "content",
+              "value": "=Successfully added information to Database. uuid : {{ $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2144,
+        544
+      ],
+      "id": "b9d351cf-a656-46c6-88b3-a18a9a625bed",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "content": "## AI Model\nProcesses the extracted transcript to generate summaries, insights, action items, and structured metadata, which can then be inserted into a vector database for semantic search and retrieval.",
+        "height": 368,
+        "width": 416
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        480,
+        -80
+      ],
+      "typeVersion": 1,
+      "id": "4234c011-9333-4f8e-8b7f-f10d33c53076",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Create Row\nSends an HTTP request to Supabase to insert a new row with `zoom_url` as a unique key, ensuring that duplicate entries are not created in the database.",
+        "height": 368,
+        "width": 416
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1584,
+        -96
+      ],
+      "typeVersion": 1,
+      "id": "c3e2fed8-ba3f-43c5-9245-a63c3c6110b9",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Table for Raw Transcripts (Detailed Q&A)\nUsing the raw extracted transcripts, the system generates a second vector database by chunking the transcript text.  \nThis vector database is linked to the unique key from **Table 01** (the primary meeting record) and is used for detailed, granular Q&A about the meeting.",
+        "height": 432,
+        "width": 1824
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        208,
+        768
+      ],
+      "typeVersion": 1,
+      "id": "11d5fbf1-61d4-4df0-a0c9-690c5d0aca38",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Create Embeddings for Summarized Information (Fuzzy Matching)\nSends an HTTP request to Supabase to store embeddings generated from the AI-produced summary, insights, action items, and metadata.  \nThese embeddings enable fuzzy semantic matching, allowing the system to quickly identify whether a meeting has already been processed or contains similar content.",
+        "height": 384,
+        "width": 432
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1584,
+        320
+      ],
+      "typeVersion": 1,
+      "id": "7e72fbb6-ddf1-4931-a087-7665565e20b1",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## Zoom Transcript Scraper\nA Playwright-based scraping function that extracts transcripts from Zoom meeting URLs.  \nThis service is deployed on Google Cloud Run and exposes a public API endpoint, allowing n8n to send URLs and retrieve cleaned transcript data reliably for different users.",
+        "height": 352,
+        "width": 448
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -816,
+        -128
+      ],
+      "typeVersion": 1,
+      "id": "082f641a-d1e8-4ecd-abd8-8653890c1d69",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## YouTube Transcript Scraper\nA serverless function that uses the YouTube Transcript API along with Webshare rotational proxies to reliably fetch transcripts from any YouTube video.  \nThis service is deployed as a Google Cloud Function and exposes an API endpoint that n8n can call to retrieve transcripts for processing.",
+        "height": 352,
+        "width": 448
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -816,
+        320
+      ],
+      "typeVersion": 1,
+      "id": "e64e3090-6787-422b-ac37-594983b7a43c",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "## AI Model\nThis model receives input from the Main Orchestrator Agent and determines whether the provided URL is a YouTube or Zoom link.  \nBased on this classification, it works together with an n8n Switch node to route the request to the correct transcript scraper service (YouTube or Zoom).",
+        "height": 352,
+        "width": 592
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1712,
+        128
+      ],
+      "typeVersion": 1,
+      "id": "8cb3adb2-423a-4813-a3e0-f17328b87386",
+      "name": "Sticky Note6"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields6",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Get a row",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Get a row": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Edit Fields5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Edit Fields4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields4": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "LangChain Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LangChain Code": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LangChain Code1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields5": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "LangChain Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields6": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge3": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request5": {
+      "main": [
+        []
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        []
+      ]
+    },
+    "HTTP Request3": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "0cc15b6d-d58d-47be-be69-36587cf81f9c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fc8a702f4b8d60bce9dfe1a6e337c712dabe9709685e4538e2c3254020cfd2fd"
+  },
+  "id": "1IfYta8hNGkiiYf2",
+  "tags": []
+}
