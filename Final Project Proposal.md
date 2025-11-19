@@ -1,5 +1,7 @@
-# 1. Project Title
-AI Meeting Summarizer
+# 1. Project Title - Group 10 
+
+## AI Meeting Summarizer 
+Andreea, Deebak, Tsehynesh
 
 ---
 
@@ -189,9 +191,50 @@ This workflow handles all **semantic search** and **Q&A** after a meeting has be
 
 ---
 
-# 11. Ethical & Privacy Considerations
+# 11. Team Roles & Responsibilities
 
-## 11.1 Transcript Access Limitations  
+### **Deebak – Custom Scraper Development, URL Classification & Supabase Infrastructure**
+- Built and deployed the **Zoom** and **YouTube transcript scrapers** using Google Cloud Run  
+- Implemented mechanisms to reliably extract transcripts from user-provided URLs  
+- Developed the **URL classification system** to determine whether a link is Zoom or YouTube  
+- Designed and maintained Supabase tables:
+  - `meetinglist`
+  - `transcript_chunks`
+- Implemented vector storage using **pgvector**  
+- Ensured correct data insertion, update flows, and duplication checks  
+- Designed cloud infrastructure for smooth integration with n8n workflows  
+
+---
+
+### **Andreea – Orchestrator Agent Development & Prompt Engineering**
+- Developed the **Main Orchestrator Agent** inside n8n  
+- Designed the agent’s reasoning steps and tool-selection logic  
+- Created robust **prompt engineering strategies** for:
+  - Summary and action item extraction  
+  - Conversation flow and memory management  
+- Configured tool definitions for:
+  - Meeting Existence Checker  
+  - Transcript Maker  
+  - Vector Retrieval Tool  
+- Ensured smooth communication between agent tools and the chat interface  
+
+---
+
+### **Tsehynesh – Frontend Interface, Meeting Summarizer UI, Testing & Workflow Feedback**
+- Designed and managed the **frontend chat interface** used to interact with the Meeting Summarizer  
+- Implemented the user-facing flow for submitting URLs and receiving summaries  
+- Conducted extensive **debugging and testing** across the orchestrator and transcript workflows  
+- Provided continuous feedback to improve:
+  - Prompt reliability  
+  - Tool accuracy  
+  - Workflow efficiency  
+- Ensured the overall user experience was smooth, intuitive, and responsive
+
+---
+
+# 12. Ethical & Privacy Considerations
+
+## 12.1 Transcript Access Limitations  
 Zoom and YouTube **only permit access to transcripts for the owner of the meeting or video** (or users explicitly granted access).  
 However, when scraping is used:
 
@@ -206,27 +249,27 @@ Thus, scraping transcripts without explicit permission is **not ethically accept
 
 This system is intended to be used **only when the user owns the meeting/video or has legitimate access**.
 
-## 11.2 User Consent and Ownership  
+## 12.2 User Consent and Ownership  
 The system assumes the user:
 
 - Owns the Zoom meeting or YouTube video  
 - Has rights to its transcript  
 - Intentionally inputs the meeting URL for processing  
 
-## 11.3 Data Security  
+## 12.3 Data Security  
 - All processed data is stored only in the user’s Supabase instance  
 - No external logging or unauthorized data retention  
 - No third-party redistribution of transcripts  
 - Embeddings contain semantic information but not full transcript text  
 
-## 11.4 Model Bias and Accuracy  
+## 12.4 Model Bias and Accuracy  
 - AI-generated summaries may contain errors or omissions  
 - Users are encouraged to verify action items and critical decisions  
 - The model does not generate or infer sensitive personal data  
 
 ---
 
-# 12. Creativity & Innovation
+# 13. Creativity & Innovation
 
 - Dual-vector RAG architecture  
 - Automatic URL classification (Zoom or Youtube - This can be scaled for Google meets, Teams,...)
@@ -234,7 +277,7 @@ The system assumes the user:
 
 ---
 
-# 13. Demo Plan
+# 14. Demo Plan
 
 1. User submits a Zoom/YouTube link  
 2. System checks if meeting exists  
@@ -247,5 +290,5 @@ The system assumes the user:
 
 ---
 
-# 14. GitHub Repository  
+# 15. GitHub Repository  
 [(Project Link)](https://github.com/dt-cs/IST-402-n8n)
