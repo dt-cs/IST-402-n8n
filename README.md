@@ -93,6 +93,14 @@ This workflow is the "factory." It is not triggered directly by the user but is 
 ![Alt text for the image](assets/Transcript_maker_01.png) 
 
 ![Alt text for the image](assets/Transcript_maker_02.png) 
+
+---
+
+## Workflow Videos
+ - ![Workflow 01](https://youtu.be/SAG5klp6cbY)
+ - ![Workflow 02](https://youtu.be/ehsM8NuaZRs)
+ - ![Workflow 03](https://youtu.be/w6Gw2UrwQ2k)
+
 ---
 
 ##  Setup & Prerequisites
